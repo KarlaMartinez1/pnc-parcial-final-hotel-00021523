@@ -7,7 +7,10 @@ import java.util.UUID;
 
 @Entity
 @Table(name = "rooms")
-@Getter @Setter @NoArgsConstructor @AllArgsConstructor
+@Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class Room {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
@@ -18,7 +21,8 @@ public class Room {
     private Hotel hotel;
 
     @Column(nullable = false)
-    private String type; // Ej: Sencilla, Doble, Suite
+    @Enumerated(EnumType.STRING)
+    private RoomType type;
 
     @Column(nullable = false)
     private BigDecimal price;

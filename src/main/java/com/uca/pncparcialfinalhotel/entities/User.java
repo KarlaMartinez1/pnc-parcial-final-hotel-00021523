@@ -6,7 +6,11 @@ import java.util.UUID;
 
 @Entity
 @Table(name = "users")
-@Getter @Setter @NoArgsConstructor @AllArgsConstructor
+@Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
+
 public class User {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
@@ -18,6 +22,8 @@ public class User {
     @Column(nullable = false)
     private String password;
 
-    @Column(nullable = false)
-    private String role; // Ej: ROLE_ADMIN, ROLE_GUEST (Luego lo puedes migrar a una tabla Role)
+    @ManyToOne
+    @JoinColumn(name = "rol_id", nullable = false)
+    private Role rol;
+
 }

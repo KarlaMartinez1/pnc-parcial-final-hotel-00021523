@@ -7,7 +7,10 @@ import java.util.UUID;
 
 @Entity
 @Table(name = "reservations")
-@Getter @Setter @NoArgsConstructor @AllArgsConstructor
+@Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class Reservation {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
