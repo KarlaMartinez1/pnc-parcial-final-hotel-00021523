@@ -1,44 +1,76 @@
 package com.uca.pncparcialfinalhotel.util;
 
+import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.io.Decoders;
+import io.jsonwebtoken.security.Keys;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
+
+import java.security.Key;
 import java.util.Date;
 
 @Service
 public class JwtService {
-    private final String SECRET_KEY = "tu_super_clave_secreta_muy_larga_y_segura_aqui";
 
-    // 15 Minutos
-    private final long ACCESS_TOKEN_EXPIRATION = 1000 * 60 * 15;
-    // 7 Días
-    private final long REFRESH_TOKEN_EXPIRATION = 1000 * 60 * 60 * 24 * 7;
+    @Value("${jwt.secret}")
+    private String secretKey;
 
-    public String generateAccessToken(String email) {
-        return buildToken(email, ACCESS_TOKEN_EXPIRATION);
+    @Value("${jwt.access-token-expiration}")
+    private Long accessTokenExpiration;
+
+    @Value("${jwt.refresh-token-expiration}")
+    private Long refreshTokenExpiration;
+
+    private Key getSigningKey() {
+        byte[] keyBytes = Decoders.BASE64.decode(secretKey);
+        return Keys.hmacShaKeyFor(keyBytes);
     }
 
-    public String generateRefreshToken(String email) {
-        return buildToken(email, REFRESH_TOKEN_EXPIRATION);
+    public String generateAccessToken(UserDetails userDetails) {
+        return buildToken(userDetails, accessTokenExpiration);
     }
 
-    private String buildToken(String email, long expiration) {
+    public String generateRefreshToken(UserDetails userDetails) {
+        return buildToken(userDetails, refreshTokenExpiration);
+    }
+
+    private String buildToken(UserDetails userDetails, Long expiration) {
+
         return Jwts.builder()
-                .setSubject(email)
-                .setIssuedAt(new Date(System.currentTimeMillis()))
-                .setExpiration(new Date(System.currentTimeMillis() + expiration))
-                .signWith(SignatureAlgorithm.HS256, SECRET_KEY.getBytes())
+                .subject(userDetails.getUsername())
+                .issuedAt(new Date())
+                .expiration(new Date(System.currentTimeMillis() + expiration))
+                .signWith(getSigningKey())
                 .compact();
     }
 
     public String extractUsername(String token) {
-        return Jwts.parser().setSigningKey(SECRET_KEY.getBytes()).parseClaimsJws(token).getBody().getSubject();
+        return extractAllClaims(token).getSubject();
     }
 
-    public boolean isTokenValid(String token) {
-        try {
-            Jwts.parser().setSigningKey(SECRET_KEY.getBytes()).parseClaimsJws(token);
-            return true;
-        } catch (Exception e) {
-            return false;
-        }
+    private Claims extractAllClaims(String token) {
+        return Jwts.parserBuilder()
+                .setSigningKey(getSigningKey())
+                .build()
+                .parseClaimsJws(token)
+                .getBody();
     }
+
+    private boolean isTokenExpired(String token) {
+
+        return extractAllClaims(token)
+                .getExpiration()
+                .before(new Date());
+    }
+
+    public boolean isTokenValid(String token, UserDetails userDetails) {
+
+        String username = extractUsername(token);
+
+        return username.equals(userDetails.getUsername())
+                && !isTokenExpired(token);
+    }
+
 }
