@@ -31,5 +31,6 @@ public class Reservation {
     private LocalDate endDate;
 
     @Column(nullable = false)
-    private String status; // Ej: PENDING, CONFIRMED, CANCELLED
+    @Enumerated(EnumType.STRING)
+    private Status status;
 }

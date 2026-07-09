@@ -22,8 +22,11 @@ public class User {
     @Column(nullable = false)
     private String password;
 
-    @ManyToOne
-    @JoinColumn(name = "rol_id", nullable = false)
-    private Role rol;
+    @Enumerated(EnumType.STRING)
+    private Rol role;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "hotel_id")
+    private Hotel hotel;
 
 }
